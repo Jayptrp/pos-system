@@ -1,23 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { Category } from '@prisma/client';
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [newCategory, setNewCategory] = useState('');
 
-  const fetchCategories = () => {
-    fetch('/api/categories')
-      .then((res) => res.json())
-      .then((data) => {
-        setCategories(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch categories', err);
-        setLoading(false);
-      });
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/categories');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data: Category[] = await res.json();
+      setCategories(data);
+    } catch (err) {
+      console.error('Failed to fetch categories', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
