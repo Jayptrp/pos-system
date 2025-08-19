@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import type { Category } from '@prisma/client';
+import { categorySchema } from '@/lib/validation';
 
-// GET /api/categories
 export async function GET() {
   try {
     const categories: Category[] = await prisma.category.findMany({
@@ -15,10 +15,11 @@ export async function GET() {
   }
 }
 
-// POST /api/categories
 export async function POST(req: Request) {
   try {
-    const { name } = await req.json();
+    const body = await req.json();
+    const parsed = categorySchema.parse(body); // Zod validation
+    const { name } = parsed;
     if (!name || typeof name !== 'string') {
       return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
     }
