@@ -1,70 +1,81 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import type { Category } from '@prisma/client';
+import { useState } from "react";
+import { useCategories, createCategory, updateCategory, deleteCategory } from "@/hooks/useCategories";
+import { CategoryInput } from "@/lib/validation";
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [newCategory, setNewCategory] = useState('');
+  const { categories, isLoading, mutate } = useCategories();
+  const [form, setForm] = useState<CategoryInput>({ name: "" });
+  const [editId, setEditId] = useState<number | null>(null);
 
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch('/api/categories');
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data: Category[] = await res.json();
-      setCategories(data);
-    } catch (err) {
-      console.error('Failed to fetch categories', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isLoading) return <p>Loading...</p>;
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!newCategory.trim()) return;
+    try {
+      if (editId) {
+        await updateCategory(editId, form);
+        setEditId(null);
+      } else {
+        await createCategory(form);
+      }
+      setForm({ name: "" });
+      mutate();
+    } catch (error) {
+      alert(error);
+    }
+  }
 
-    await fetch('/api/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newCategory }),
-    });
-
-    setNewCategory('');
-    fetchCategories();
-  };
-
-  if (loading) return <p>Loading...</p>;
+  async function handleDelete(id: number) {
+    if (!confirm("Delete category?")) return;
+    await deleteCategory(id);
+    mutate();
+  }
 
   return (
-    <main className="p-6">
+    <div className="max-w-xl mx-auto py-6">
       <h1 className="text-2xl font-bold mb-4">Categories</h1>
 
-      <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
         <input
           type="text"
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value)}
-          placeholder="New category"
-          className="border px-2 py-1 rounded"
+          value={form.name}
+          onChange={(e) => setForm({ name: e.target.value })}
+          placeholder="Category name"
+          className="border px-2 py-1 flex-1 rounded"
         />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-1 rounded">
-          Add
+        <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">
+          {editId ? "Update" : "Add"}
         </button>
       </form>
 
+      {/* Category list */}
       <ul className="space-y-2">
-        {categories.map((cat) => (
-          <li key={cat.id} className="p-3 bg-gray-100 rounded">
-            {cat.name}
+        {categories?.map((cat: any) => (
+          <li key={cat.id} className="flex justify-between items-center border p-2 rounded">
+            <span>{cat.name}</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setEditId(cat.id);
+                  setForm({ name: cat.name });
+                }}
+                className="bg-yellow-500 text-white px-3 py-1 rounded"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(cat.id)}
+                className="bg-red-500 text-white px-3 py-1 rounded"
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
-    </main>
+    </div>
   );
 }
