@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import db from "@/lib/db";
 import { categorySchema } from "@/lib/validation";
 
 // GET one category
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   const id = Number(params.id);
-  const category = await prisma.category.findUnique({ where: { id } });
+  const category = await db.category.findUnique({ where: { id } });
 
   if (!category) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
@@ -25,7 +25,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 
   try {
-    const updated = await prisma.category.update({
+    const updated = await db.category.update({
       where: { id },
       data: parsed.data,
     });
@@ -40,7 +40,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   const id = Number(params.id);
 
   try {
-    await prisma.category.delete({ where: { id } });
+    await db.category.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Failed to delete category" }, { status: 500 });

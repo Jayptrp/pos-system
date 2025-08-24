@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import db from '@/lib/db';
 import type { Category } from '@prisma/client';
 import { categorySchema } from '@/lib/validation';
 
 export async function GET() {
   try {
-    const categories: Category[] = await prisma.category.findMany({
+    const categories: Category[] = await db.category.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(categories);
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
     }
 
-    const category: Category = await prisma.category.create({
+    const category: Category = await db.category.create({
       data: { name },
     });
 
