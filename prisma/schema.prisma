@@ -1,11 +1,9 @@
-// schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // or "mysql" depending on your DB
+  provider = "postgresql" // or "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -22,28 +20,28 @@ model MenuItem {
   name        String
   price       Float
   categoryId  Int
-  category    Category   @relation(fields: [categoryId], references: [id])
+  category    Category   @relation(fields: [categoryId], references: [id]) // no cascade
   orderItems  OrderItem[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
 
 model InventoryLog {
-  id         Int      @id @default(autoincrement())
+  id         Int            @id @default(autoincrement())
   itemName   String
   quantity   Int
-  changeType String   // e.g., "INCREASE" or "DECREASE"
-  createdAt  DateTime @default(now())
+  changeType ChangeType     // ENUM instead of free text
+  createdAt  DateTime       @default(now())
 }
 
 model Order {
-  id         Int         @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   tableNumber Int
-  status     String      // e.g., "PENDING", "COMPLETED"
-  orderItems OrderItem[]
-  payments   Payment[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  status      OrderStatus  // ENUM instead of free text
+  orderItems  OrderItem[]
+  payments    Payment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model OrderItem {
@@ -51,15 +49,34 @@ model OrderItem {
   orderId    Int
   menuItemId Int
   quantity   Int
-  order      Order     @relation(fields: [orderId], references: [id])
-  menuItem   MenuItem  @relation(fields: [menuItemId], references: [id])
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem   MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
-  id         Int       @id @default(autoincrement())
-  orderId    Int
-  amount     Float
-  method     String    // e.g., "CASH", "CARD"
-  order      Order     @relation(fields: [orderId], references: [id])
-  createdAt  DateTime  @default(now())
+  id             Int            @id @default(autoincrement())
+  orderId        Int
+  amount         Float
+  method         PaymentMethod
+  transactionRef String?        // QR / Bank ref (nullable for cash)
+  order          Order          @relation(fields: [orderId], references: [id]) // no cascade
+  createdAt      DateTime       @default(now())
+
+  @@unique([method, transactionRef])
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_BANKING
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum ChangeType {
+  INCREASE
+  DECREASE
 }
