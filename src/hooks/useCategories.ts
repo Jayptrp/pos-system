@@ -10,11 +10,14 @@ export function useCategories() {
     categories: data,
     isLoading: !error && !data,
     isError: error,
+    createCategory,
+    updateCategory,
+    deleteCategory,
     mutate,
   };
 }
 
-export async function createCategory(input: CategoryInput) {
+async function createCategory(input: CategoryInput) {
   const res = await fetch("/api/categories", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,7 +27,7 @@ export async function createCategory(input: CategoryInput) {
   return res.json();
 }
 
-export async function updateCategory(id: number, input: CategoryInput) {
+async function updateCategory(id: number, input: CategoryInput) {
   const res = await fetch(`/api/categories/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -34,7 +37,7 @@ export async function updateCategory(id: number, input: CategoryInput) {
   return res.json();
 }
 
-export async function deleteCategory(id: number) {
+async function deleteCategory(id: number) {
   const res = await fetch(`/api/categories/${id}`, {
     method: "DELETE",
   });
