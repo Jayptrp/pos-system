@@ -22,8 +22,9 @@ export default function RootLayout({
           <ul className="flex space-x-4">
             <li><a href="/">Home</a></li>
             <li><a href="/categories">Categories</a></li>
-            <li><a href="/menu-items">Menu Items</a></li>
+            <li><a href="/inventory">Menu Items</a></li>
             <li><a href="/orders">Orders</a></li>
+            <li><a href="/debug">Debug</a></li>
           </ul>
         </nav>
 
