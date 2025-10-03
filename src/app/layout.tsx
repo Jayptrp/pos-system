@@ -18,8 +18,6 @@ export default function RootLayout({
           POS System
         </header>
 
-        <main className="p-6">{children}</main>
-
         <nav className="bg-gray-200 p-4">
           <ul className="flex space-x-4">
             <li><a href="/">Home</a></li>
@@ -28,6 +26,8 @@ export default function RootLayout({
             <li><a href="/orders">Orders</a></li>
           </ul>
         </nav>
+
+        <main className="p-6">{children}</main>
 
         <footer className="p-4 bg-gray-100 text-center text-sm">
           &copy; 2025 POS System
