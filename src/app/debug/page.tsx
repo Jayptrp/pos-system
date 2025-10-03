@@ -5,7 +5,7 @@ import { useCategories } from "@/hooks/useCategories";
 import PopupForm from "@/components/PopupForm";
 
 export default function DebugPage() {
-  const { categories, createCategory, updateCategory, deleteCategory, isLoading } = useCategories();
+  const { categories, createCategory, updateCategory, deleteCategory, isLoading, mutate } = useCategories();
 
   const [showPopup, setShowPopup] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null); // null = create mode
@@ -31,7 +31,14 @@ export default function DebugPage() {
       await createCategory({ name: nameInput });
     }
     setShowPopup(false);
+    mutate();
   };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Delete category?")) return;
+    await deleteCategory(id);
+    mutate();
+  }
 
   return (
     <div className="p-6 space-y-4">
@@ -64,7 +71,7 @@ export default function DebugPage() {
                   </button>
                   <button
                     className="text-red-600 text-sm"
-                    onClick={() => deleteCategory(cat.id)}
+                    onClick={() => handleDelete(cat.id)}
                   >
                     D
                   </button>
