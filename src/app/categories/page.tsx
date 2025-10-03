@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useCategories, createCategory, updateCategory, deleteCategory } from "@/hooks/useCategories";
+import { useCategories } from "@/hooks/useCategories";
 import { CategoryInput } from "@/lib/validation";
 
 export default function CategoriesPage() {
-  const { categories, isLoading, mutate } = useCategories();
+  const { categories, isLoading, isError, createCategory, updateCategory, deleteCategory, mutate } =
+    useCategories();
   const [form, setForm] = useState<CategoryInput>({ name: "" });
   const [editId, setEditId] = useState<number | null>(null);
 
