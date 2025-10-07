@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import PopupForm from "@/components/PopupForm";
 
@@ -10,20 +10,33 @@ export default function CategorySection() {
   const [showPopup, setShowPopup] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [nameInput, setNameInput] = useState("");
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const openCreate = () => {
     setEditingCategory(null);
     setNameInput("");
+    setError("");
     setShowPopup(true);
   };
 
   const openEdit = (cat: any) => {
     setEditingCategory(cat);
     setNameInput(cat.name);
+    setError("");
     setShowPopup(true);
+    // focus will happen after render
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleSubmit = async () => {
+    if (!nameInput.trim()) {
+      setError("Please enter a category name.");
+      inputRef.current?.focus();
+      return;
+    }
+
+    setError("");
     if (editingCategory) {
       await updateCategory(editingCategory.id, { name: nameInput });
     } else {
@@ -74,12 +87,20 @@ export default function CategorySection() {
             {editingCategory ? "Update Category" : "Create Category"}
           </h3>
           <input
+            ref={inputRef}
             type="text"
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
-            className="border p-2 w-full mb-4 rounded"
+            className={`border p-2 w-full mb-2 rounded ${error ? "border-red-500" : ""}`}
             placeholder="Category Name"
+            aria-invalid={!!error}
+            aria-describedby={error ? "category-name-error" : undefined}
           />
+          {error && (
+            <p id="category-name-error" className="text-sm text-red-600 mb-2">
+              {error}
+            </p>
+          )}
           <button
             className="bg-green-500 text-white px-4 py-2 rounded"
             onClick={handleSubmit}

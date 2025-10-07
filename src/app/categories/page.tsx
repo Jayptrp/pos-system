@@ -5,7 +5,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { CategoryInput } from "@/lib/validation";
 
 export default function CategoriesPage() {
-  const { categories, isLoading, isError, createCategory, updateCategory, deleteCategory, mutate } =
+  const { categories, isLoading, isError, createCategory, updateCategory, deleteCategory } =
     useCategories();
   const [form, setForm] = useState<CategoryInput>({ name: "" });
   const [editId, setEditId] = useState<number | null>(null);
@@ -22,7 +22,6 @@ export default function CategoriesPage() {
         await createCategory(form);
       }
       setForm({ name: "" });
-      mutate();
     } catch (error) {
       alert(error);
     }
@@ -31,7 +30,6 @@ export default function CategoriesPage() {
   async function handleDelete(id: number) {
     if (!confirm("Delete category?")) return;
     await deleteCategory(id);
-    mutate();
   }
 
   return (

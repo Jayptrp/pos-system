@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import { useMenuItems } from "@/hooks/useMenuItems";
+import { useCategories } from "@/hooks/useCategories";
 import PopupForm from "@/components/PopupForm";
 
 export default function MenuItemSection() {
-  const { menuItems, createMenuItem, updateMenuItem, deleteMenuItem, isLoading, mutate } = useMenuItems();
+  const { menuItems, createMenuItem, updateMenuItem, deleteMenuItem, isLoading } = useMenuItems();
+  const { categories, isLoading: categoriesLoading } = useCategories();
 
   const [showPopup, setShowPopup] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [nameInput, setNameInput] = useState("");
   const [priceInput, setPriceInput] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<number | "">("");
 
   const openCreate = () => {
     setEditingItem(null);
@@ -20,27 +23,37 @@ export default function MenuItemSection() {
   };
 
   const openEdit = (item: any) => {
-    setEditingItem(item);
-    setNameInput(item.name);
-    setPriceInput(item.price);
-    setShowPopup(true);
+  setEditingItem(item);
+  setNameInput(item.name);
+  setPriceInput(item.price);
+  setSelectedCategory(item.categoryId);
+  setShowPopup(true);
   };
 
   const handleSubmit = async () => {
-    const payload = { name: nameInput, price: parseFloat(priceInput) };
-    if (editingItem) {
-      await updateMenuItem(editingItem.id, payload);
-    } else {
-      await createMenuItem(payload);
-    }
-    setShowPopup(false);
-    mutate();
+  if (!selectedCategory) {
+    alert("Please select a category");
+    return;
+  }
+
+  const payload = {
+    name: nameInput,
+    price: parseFloat(priceInput),
+    categoryId: selectedCategory,
+  };
+
+  if (editingItem) {
+    await updateMenuItem(editingItem.id, payload);
+  } else {
+    await createMenuItem(payload);
+  }
+
+  setShowPopup(false);
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete item?")) return;
     await deleteMenuItem(id);
-    mutate();
   };
 
   return (
@@ -79,6 +92,7 @@ export default function MenuItemSection() {
           <h3 className="text-lg font-semibold mb-2">
             {editingItem ? "Update Menu Item" : "Create Menu Item"}
           </h3>
+
           <input
             type="text"
             value={nameInput}
@@ -86,13 +100,28 @@ export default function MenuItemSection() {
             className="border p-2 w-full mb-2 rounded"
             placeholder="Item Name"
           />
+
           <input
             type="number"
             value={priceInput}
             onChange={(e) => setPriceInput(e.target.value)}
-            className="border p-2 w-full mb-4 rounded"
+            className="border p-2 w-full mb-2 rounded"
             placeholder="Price"
           />
+
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(Number(e.target.value))}
+            className="border p-2 w-full mb-4 rounded"
+          >
+            <option value="">Select category</option>
+            {categories.map((cat: any) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+
           <button
             className="bg-green-500 text-white px-4 py-2 rounded"
             onClick={handleSubmit}
