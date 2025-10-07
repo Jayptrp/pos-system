@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useCategories } from "@/hooks/useCategories";
 import PopupForm from "@/components/PopupForm";
@@ -14,41 +14,78 @@ export default function MenuItemSection() {
   const [nameInput, setNameInput] = useState("");
   const [priceInput, setPriceInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | "">("");
+  const [nameError, setNameError] = useState("");
+  const [priceError, setPriceError] = useState("");
+
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  const priceRef = useRef<HTMLInputElement | null>(null);
 
   const openCreate = () => {
     setEditingItem(null);
     setNameInput("");
     setPriceInput("");
+    setSelectedCategory("");
+    setNameError("");
+    setPriceError("");
     setShowPopup(true);
   };
 
   const openEdit = (item: any) => {
-  setEditingItem(item);
-  setNameInput(item.name);
-  setPriceInput(item.price);
-  setSelectedCategory(item.categoryId);
-  setShowPopup(true);
+    setEditingItem(item);
+    setNameInput(item.name ?? "");
+    // ensure priceInput is a string for controlled input
+    setPriceInput(item.price !== undefined && item.price !== null ? String(item.price) : "");
+    setSelectedCategory(item.categoryId ?? "");
+    setNameError("");
+    setPriceError("");
+    setShowPopup(true);
   };
 
   const handleSubmit = async () => {
-  if (!selectedCategory) {
-    alert("Please select a category");
-    return;
-  }
+    // reset previous errors
+    setNameError("");
+    setPriceError("");
 
-  const payload = {
-    name: nameInput,
-    price: parseFloat(priceInput),
-    categoryId: selectedCategory,
-  };
+    // validation: name required
+    if (!nameInput.trim()) {
+      setNameError("Please enter an item name.");
+      nameRef.current?.focus();
+      return;
+    }
 
-  if (editingItem) {
-    await updateMenuItem(editingItem.id, payload);
-  } else {
-    await createMenuItem(payload);
-  }
+    // validation: price required
+    if (priceInput === "" || priceInput === null) {
+      setPriceError("Please enter a price.");
+      priceRef.current?.focus();
+      return;
+    }
 
-  setShowPopup(false);
+    const parsedPrice = parseFloat(priceInput);
+    if (isNaN(parsedPrice)) {
+      setPriceError("Price must be a valid number.");
+      priceRef.current?.focus();
+      return;
+    }
+
+    if (parsedPrice < 1) {
+      setPriceError("Price must be at least 1.");
+      priceRef.current?.focus();
+      return;
+    }
+
+    const payload = {
+      name: nameInput.trim(),
+      price: parsedPrice,
+      categoryId: selectedCategory || null,
+    };
+
+    if (editingItem) {
+      await updateMenuItem(editingItem.id, payload);
+    } else {
+      await createMenuItem(payload);
+    }
+
+    setShowPopup(false);
   };
 
   const handleDelete = async (id: number) => {
@@ -94,24 +131,42 @@ export default function MenuItemSection() {
           </h3>
 
           <input
+            ref={nameRef}
             type="text"
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
-            className="border p-2 w-full mb-2 rounded"
+            className={`border p-2 w-full mb-2 rounded ${nameError ? "border-red-500" : ""}`}
             placeholder="Item Name"
+            aria-invalid={!!nameError}
+            aria-describedby={nameError ? "item-name-error" : undefined}
           />
+          {nameError && (
+            <p id="item-name-error" className="text-sm text-red-600 mb-2">
+              {nameError}
+            </p>
+          )}
 
           <input
+            ref={priceRef}
             type="number"
             value={priceInput}
             onChange={(e) => setPriceInput(e.target.value)}
-            className="border p-2 w-full mb-2 rounded"
+            className={`border p-2 w-full mb-2 rounded ${priceError ? "border-red-500" : ""}`}
             placeholder="Price"
+            aria-invalid={!!priceError}
+            aria-describedby={priceError ? "price-error" : undefined}
+            min="0"
+            step="0.01"
           />
+          {priceError && (
+            <p id="price-error" className="text-sm text-red-600 mb-2">
+              {priceError}
+            </p>
+          )}
 
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(Number(e.target.value))}
+            onChange={(e) => setSelectedCategory(Number(e.target.value) || "")}
             className="border p-2 w-full mb-4 rounded"
           >
             <option value="">Select category</option>
