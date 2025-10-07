@@ -14,6 +14,7 @@ export function useOrderItems() {
       body: JSON.stringify(parsed),
     });
     if (!res.ok) throw new Error("Failed to create order item");
+    mutate();
   };
 
   const updateOrderItem = async (id: number, values: unknown) => {
@@ -23,11 +24,13 @@ export function useOrderItems() {
       body: JSON.stringify(parsed),
     });
     if (!res.ok) throw new Error("Failed to update order item");
+    mutate();
   };
 
   const deleteOrderItem = async (id: number) => {
     const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete order item");
+    mutate();
   };
 
   return {
@@ -37,6 +40,5 @@ export function useOrderItems() {
     createOrderItem,
     updateOrderItem,
     deleteOrderItem,
-    mutate
   };
 }

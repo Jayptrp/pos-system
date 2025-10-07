@@ -5,7 +5,7 @@ import { useCategories } from "@/hooks/useCategories";
 import PopupForm from "@/components/PopupForm";
 
 export default function CategorySection() {
-  const { categories, createCategory, updateCategory, deleteCategory, isLoading, mutate } = useCategories();
+  const { categories, createCategory, updateCategory, deleteCategory, isLoading } = useCategories();
 
   const [showPopup, setShowPopup] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
@@ -30,13 +30,11 @@ export default function CategorySection() {
       await createCategory({ name: nameInput });
     }
     setShowPopup(false);
-    mutate();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete category?")) return;
     await deleteCategory(id);
-    mutate();
   };
 
   return (

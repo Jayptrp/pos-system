@@ -14,6 +14,7 @@ export function useInventoryLogs() {
       body: JSON.stringify(parsed),
     });
     if (!res.ok) throw new Error("Failed to create log");
+    mutate();
   };
 
   const updateInventoryLog = async (id: number, values: unknown) => {
@@ -23,11 +24,13 @@ export function useInventoryLogs() {
       body: JSON.stringify(parsed),
     });
     if (!res.ok) throw new Error("Failed to update log");
+    mutate();
   };
 
   const deleteInventoryLog = async (id: number) => {
     const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete log");
+    mutate();
   };
 
   return {
@@ -37,6 +40,5 @@ export function useInventoryLogs() {
     createInventoryLog,
     updateInventoryLog,
     deleteInventoryLog,
-    mutate
   };
 }

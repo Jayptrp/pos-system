@@ -14,6 +14,7 @@ export function usePayments() {
       body: JSON.stringify(parsed),
     });
     if (!res.ok) throw new Error("Failed to create payment");
+    mutate();
   };
 
   const updatePayment = async (id: number, values: unknown) => {
@@ -23,11 +24,13 @@ export function usePayments() {
       body: JSON.stringify(parsed),
     });
     if (!res.ok) throw new Error("Failed to update payment");
+    mutate();
   };
 
   const deletePayment = async (id: number) => {
     const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete payment");
+    mutate();
   };
 
   return {
@@ -37,6 +40,5 @@ export function usePayments() {
     createPayment,
     updatePayment,
     deletePayment,
-    mutate
   };
 }
