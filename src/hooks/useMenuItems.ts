@@ -14,7 +14,6 @@ export function useMenuItems() {
       body: JSON.stringify(parsed),
     });
     if (!res.ok) throw new Error("Failed to create menu item");
-    // mutate();
   };
 
   const updateMenuItem = async (id: number, values: unknown) => {
@@ -24,13 +23,11 @@ export function useMenuItems() {
       body: JSON.stringify(parsed),
     });
     if (!res.ok) throw new Error("Failed to update menu item");
-    // mutate();
   };
 
   const deleteMenuItem = async (id: number) => {
     const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete menu item");
-    // mutate();
   };
 
   return {
