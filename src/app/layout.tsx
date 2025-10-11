@@ -1,16 +1,13 @@
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: 'POS System',
   description: 'Point of Sale system built with Next.js App Router & TypeScript',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
@@ -29,6 +26,7 @@ export default function RootLayout({
         </nav>
 
         <main className="p-6">{children}</main>
+        <Toaster position="bottom-right" reverseOrder={false} />
 
         <footer className="p-4 bg-gray-100 text-center text-sm">
           &copy; 2025 POS System

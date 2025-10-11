@@ -24,7 +24,20 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await db.menuItem.delete({ where: { id: Number(params.id) } });
-  return NextResponse.json({}, { status: 204 });
+export async function DELETE(_: Request, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+
+    await db.menuItem.delete({
+      where: { id: Number(id) },
+    });
+
+    // ✅ No content version
+    return new NextResponse(null, { status: 204 });
+
+    // or: return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Delete failed:", error);
+    return NextResponse.json({ error: "Failed to delete menu item" }, { status: 500 });
+  }
 }

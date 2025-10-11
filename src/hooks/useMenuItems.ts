@@ -13,7 +13,7 @@ export function useMenuItems() {
       method: "POST",
       body: JSON.stringify(parsed),
     });
-    if (!res.ok) throw new Error("Failed to create menu item");
+    if (!res.ok) return res.json();
     mutate();
   };
 
@@ -23,13 +23,13 @@ export function useMenuItems() {
       method: "PATCH",
       body: JSON.stringify(parsed),
     });
-    if (!res.ok) throw new Error("Failed to update menu item");
+    if (!res.ok) return res.json();
     mutate();
   };
 
   const deleteMenuItem = async (id: number) => {
     const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Failed to delete menu item");
+    if (!res.ok) return res.json();
     mutate();
   };
 

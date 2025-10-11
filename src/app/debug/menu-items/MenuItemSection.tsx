@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useCategories } from "@/hooks/useCategories";
 import PopupForm from "@/components/PopupForm";
+import ShowConfirmToast from "@/components/ShowConfirmToast";
+import toast from "react-hot-toast";
 
 export default function MenuItemSection() {
   const { menuItems, createMenuItem, updateMenuItem, deleteMenuItem, isLoading } = useMenuItems();
@@ -80,18 +82,41 @@ export default function MenuItemSection() {
     };
 
     if (editingItem) {
-      await updateMenuItem(editingItem.id, payload);
+      const res = await updateMenuItem(editingItem.id, payload);
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Menu item updated successfully!");
+      }
     } else {
-      await createMenuItem(payload);
+      const res = await createMenuItem(payload);
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Menu item created successfully!");
+      }
     }
 
     setShowPopup(false);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete item?")) return;
-    await deleteMenuItem(id);
-  };
+    const confirmation = await ShowConfirmToast("delete this menu item");
+    if (!confirmation) return;
+    else {
+      try {
+        const res = await deleteMenuItem(id);
+
+        if (res?.error) {
+          toast.error(res.error);
+        } else {
+          toast.success("Menu item deleted successfully!");
+        }
+      } catch (err) {
+        toast.error("Something went wrong while deleting.");
+      }
+    };
+  }
 
   return (
     <div className="border p-4 rounded-lg">

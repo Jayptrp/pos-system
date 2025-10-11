@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import PopupForm from "@/components/PopupForm";
+import ShowConfirmToast from "@/components/ShowConfirmToast";
+import toast from "react-hot-toast";
 
 export default function CategorySection() {
   const { categories, createCategory, updateCategory, deleteCategory, isLoading } = useCategories();
@@ -38,16 +40,46 @@ export default function CategorySection() {
 
     setError("");
     if (editingCategory) {
-      await updateCategory(editingCategory.id, { name: nameInput });
+      const res = await updateCategory(editingCategory.id, { name: nameInput });
+      if (res?.fieldErrors?.name) {
+        setError(res.fieldErrors.name);
+        inputRef.current?.focus();
+      } else if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Category updated successfully!");
+        setShowPopup(false);
+      }
     } else {
-      await createCategory({ name: nameInput });
+      const res = await createCategory({ name: nameInput });
+      if (res?.fieldErrors?.name) {
+        setError(res.fieldErrors.name);
+        inputRef.current?.focus();
+      } else if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Category created successfully!");
+        setShowPopup(false);
+      }
     }
-    setShowPopup(false);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete category?")) return;
-    await deleteCategory(id);
+    const confirmation = await ShowConfirmToast("delete this category");
+    if (!confirmation) return;
+    else {
+      try {
+        const res = await deleteCategory(id);;
+
+        if (res?.error) {
+          toast.error(res.error);
+        } else {
+          toast.success("Category deleted successfully!");
+        }
+      } catch (err) {
+        toast.error("Something went wrong while deleting.");
+      }
+    }; 
   };
 
   return (

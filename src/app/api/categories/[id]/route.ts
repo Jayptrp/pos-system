@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { categorySchema } from "@/lib/validation";
+import { Prisma } from "@prisma/client";
 
 // GET one category
 export async function GET(req: Request, { params }: { params: { id: string } }) {
@@ -37,12 +38,26 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
 // DELETE category
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+  const param = await params
+  const id = Number(param.id);
 
   try {
     await db.category.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to delete category" }, { status: 500 });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        return NextResponse.json(
+          { error: "Cannot delete category: It is still referenced by existing menu items." },
+          { status: 400 }
+        );
+      }
+    }
+
+    console.error("Unexpected error deleting category:", error);
+    return NextResponse.json(
+      { error: "Failed to delete category" },
+      { status: 500 }
+    );
   }
 }
