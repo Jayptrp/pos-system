@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { menuItemSchema } from "@/lib/validation";
-import type { MenuItem } from "@prisma/client";
 
 // GET all menu items
 export async function GET() {
   try {
-    const menuItems: MenuItem[] = await db.menuItem.findMany({
+    const menuItems = await db.menuItem.findMany({
       include: { category: true },
       orderBy: { createdAt: "desc" },
     });

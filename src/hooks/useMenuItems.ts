@@ -1,14 +1,9 @@
 import useSWR from "swr";
 import { menuItemSchema } from "@/lib/validation";
+import type { HookResult } from "@/lib/types";
 
 const BASE_URL = "/api/menu-items";
 const fetcher = (url: string) => fetch(url).then(res => res.json());
-
-export type HookResult = {
-  success: boolean;
-  error?: string;
-  fieldErrors?: Record<string, string>;
-};
 
 export function useMenuItems() {
   const { data, error, isLoading, mutate } = useSWR(BASE_URL, fetcher);

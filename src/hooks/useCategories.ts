@@ -1,27 +1,25 @@
 import useSWR from "swr";
 import { categorySchema } from "@/lib/validation";
+import type { HookResult } from "@/lib/types";
+import { apiFetch } from "@/lib/fetcher"; // ensure how to use ts
 
+// const BASE_URL = "/api/categories";
+// const fetcher = (url: string) => fetch(url).then(res => res.json());
 const BASE_URL = "/api/categories";
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
-export type HookResult = {
-  success: boolean;
-  error?: string;
-  fieldErrors?: Record<string, string>;
-};
+const fetcher = (url: string) => apiFetch<any>(url);
 
 export function useCategories() {
   const { data, error, isLoading, mutate } = useSWR(BASE_URL, fetcher);
 
   const createCategory = async (values: unknown): Promise<HookResult> => {
     const parsed = categorySchema.safeParse(values);
-    // if (!parsed.success) {
-    //   const fieldErrors: Record<string, string> = {};
-    //   for (const [key, value] of Object.entries(parsed.error.flatten().fieldErrors)) {
-    //     fieldErrors[key] = value?.[0] ?? "Invalid value";
-    //   }
-    //   return { success: false, fieldErrors };
-    // }
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const [key, value] of Object.entries(parsed.error.flatten().fieldErrors)) {
+        fieldErrors[key] = value?.[0] ?? "Invalid value";
+      }
+      return { success: false, fieldErrors };
+    }
 
     try {
       const res = await fetch(BASE_URL, {
@@ -31,7 +29,7 @@ export function useCategories() {
       });
 
       if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
+        const json = await res.json().catch(() => ({})); // WHY CATCH wtf is that
         return { success: false, error: json?.error || "Failed to create category" };
       }
 
@@ -78,7 +76,7 @@ export function useCategories() {
       const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        return { success: false, error: json?.error || "Failed to delete category" };
+        return { success: false, error: json?.error?.message || "Failed to delete category" };
       }
 
       await mutate();
