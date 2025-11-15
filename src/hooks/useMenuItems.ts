@@ -2,11 +2,15 @@ import useSWR from "swr";
 import { menuItemSchema } from "@/lib/validation";
 import type { HookResult } from "@/lib/types";
 import { apiFetch } from "@/lib/fetcher";
+import { z } from "zod";
+
+// 2. Extract the TypeScript type from your Zod schema
+type MenuItem = z.infer<typeof menuItemSchema>;
 
 const BASE_URL = "/api/menu-items";
 
 export function useMenuItems() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, apiFetch);
+  const { data, error, isLoading, mutate } = useSWR<MenuItem[]>(BASE_URL, apiFetch);
 
   const createMenuItem = async (values: unknown): Promise<HookResult> => {
     const parsed = menuItemSchema.safeParse(values);

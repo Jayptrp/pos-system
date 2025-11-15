@@ -2,11 +2,15 @@ import useSWR from "swr";
 import { categorySchema } from "@/lib/validation";
 import type { HookResult } from "@/lib/types";
 import { apiFetch } from "@/lib/fetcher";
+import { z } from "zod";
+
+// 2. Extract the TypeScript type from your Zod schema
+type Category = z.infer<typeof categorySchema>;
 
 const BASE_URL = "/api/categories";
 
 export function useCategories() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, apiFetch);
+  const { data, error, isLoading, mutate } = useSWR<Category[]>(BASE_URL, apiFetch);
 
   const createCategory = async (values: unknown): Promise<HookResult> => {
     const parsed = categorySchema.safeParse(values);
