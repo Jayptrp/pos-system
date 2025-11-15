@@ -86,8 +86,8 @@ export default function MenuItemSection() {
       }
     } else {
       const res = await createMenuItem(payload);
-      if (res?.error) {
-        toast.error(res.error);
+      if (res.error || res.fieldErrors) {
+        toast.error(res.error || res.fieldErrors?.name || "Failed to create menu item");
       } else {
         toast.success("Menu item created successfully!");
       }
@@ -128,7 +128,7 @@ export default function MenuItemSection() {
   );
 
   // Filter items that don't have a category
-  const uncategorizedItems = menuItems ? menuItems.filter((item: any) => !item.categoryId) : [];
+  const uncategorizedItems = menuItems ? menuItems.filter((item: any) => !item.category) : [];
 
   return (
     <div className="border p-4 rounded-lg">
