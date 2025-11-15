@@ -6,9 +6,10 @@ import { handlePrismaError } from "@/lib/errorHandler";
 import { z } from "zod";
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = await params;
+  const param = await params;
+  const id = Number(param.id);
   try {
-    const log = await db.inventoryLog.findUnique({ where: { id: Number(id) } });
+    const log = await db.inventoryLog.findUnique({ where: { id: id } });
     return success(log);
   } catch (error) {
     return handlePrismaError(error);
@@ -16,7 +17,8 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = await params;
+  const param = await params;
+  const id = Number(param.id);
   const body = await req.json();
   const parsed = inventoryLogSchema.partial().safeParse(body);
   if (!parsed.success) {
@@ -24,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   try {
     const updated = await db.inventoryLog.update({
-      where: { id: Number(id) },
+      where: { id: id },
       data: parsed.data,
     });
     return success(updated);
@@ -34,9 +36,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = await params;
+  const param = await params;
+  const id = Number(param.id);
   try {
-    await db.inventoryLog.delete({ where: { id: Number(id) } });
+    await db.inventoryLog.delete({ where: { id: id } });
     return success({ id });
   } catch (error) {
     return handlePrismaError(error);

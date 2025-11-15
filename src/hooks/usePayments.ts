@@ -1,11 +1,11 @@
 import useSWR from "swr";
 import { paymentSchema } from "@/lib/validation";
+import { apiFetch } from "@/lib/fetcher";
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
 const BASE_URL = "/api/payments";
 
 export function usePayments() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, fetcher);
+  const { data, error, isLoading, mutate } = useSWR(BASE_URL, apiFetch);
 
   const createPayment = async (values: unknown) => {
     const parsed = paymentSchema.parse(values);

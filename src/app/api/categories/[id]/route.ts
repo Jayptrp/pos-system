@@ -3,6 +3,7 @@ import db from "@/lib/db";
 import { categorySchema } from "@/lib/validation";
 import { success, failure } from "@/lib/apiResponse";
 import { handlePrismaError } from "@/lib/errorHandler";
+import { z } from "zod";
 
 // GET one category
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -23,7 +24,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   const parsed = categorySchema.safeParse(body);
   if (!parsed.success) {
-    return failure("VALIDATION_ERROR", "Invalid input", 400, parsed.error.format());
+    return failure("VALIDATION_ERROR", "Invalid input", 400, z.treeifyError(parsed.error));
   }
 
   try {

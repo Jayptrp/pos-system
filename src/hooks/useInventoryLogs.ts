@@ -1,11 +1,11 @@
 import useSWR from "swr";
 import { inventoryLogSchema } from "@/lib/validation";
+import { apiFetch } from "@/lib/fetcher";
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
 const BASE_URL = "/api/inventory-logs";
 
 export function useInventoryLogs() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, fetcher);
+  const { data, error, isLoading, mutate } = useSWR(BASE_URL, apiFetch);
 
   const createInventoryLog = async (values: unknown) => {
     const parsed = inventoryLogSchema.parse(values);

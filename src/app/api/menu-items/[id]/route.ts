@@ -1,13 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import db from "@/lib/db";
 import { menuItemSchema } from "@/lib/validation";
-import { Prisma } from "@prisma/client";
+import { success, failure } from "@/lib/apiResponse";
+import { handlePrismaError } from "@/lib/errorHandler";
+import { z } from "zod";
 
 // GET one menu item
-export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
+  const param = await params;
+  const id = Number(param.id);
   if (isNaN(id)) {
-    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    return failure("INVALID_ID", "Invalid ID", 400);
   }
 
   try {
@@ -17,21 +20,21 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     });
 
     if (!item) {
-      return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
+      return failure("MENU_ITEM_NOT_FOUND", "Menu item not found", 404);
     }
 
-    return NextResponse.json(item);
+    return success(item);
   } catch (error) {
-    console.error("Error fetching menu item:", error);
-    return NextResponse.json({ error: "Failed to fetch menu item" }, { status: 500 });
+    return handlePrismaError(error);
   }
 }
 
 // UPDATE (PATCH) menu item
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const param = await params;
+  const id = Number(param.id);
   if (isNaN(id)) {
-    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    return failure("INVALID_ID", "Invalid ID", 400);
   }
 
   try {
@@ -39,7 +42,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const parsed = menuItemSchema.partial().safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(parsed.error.format(), { status: 400 });
+      return failure("VALIDATION_ERROR", "Invalid input", 400, z.treeifyError(parsed.error));
     }
 
     const updated = await db.menuItem.update({
@@ -47,34 +50,24 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       data: parsed.data,
     });
 
-    return NextResponse.json(updated);
+    return success(updated);
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      // P2025 = record not found
-      return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
-    }
-
-    console.error("Error updating menu item:", error);
-    return NextResponse.json({ error: "Failed to update menu item" }, { status: 500 });
+    return handlePrismaError(error);
   }
 }
 
 // DELETE menu item
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+  const param = await params;
+  const id = Number(param.id);
   if (isNaN(id)) {
-    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    return failure("INVALID_ID", "Invalid ID", 400);
   }
 
   try {
     await db.menuItem.delete({ where: { id } });
-    return new NextResponse(null, { status: 204 });
+    return success({ id });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
-    }
-
-    console.error("Error deleting menu item:", error);
-    return NextResponse.json({ error: "Failed to delete menu item" }, { status: 500 });
+    return handlePrismaError(error);
   }
 }

@@ -1,12 +1,12 @@
 import useSWR from "swr";
 import { menuItemSchema } from "@/lib/validation";
 import type { HookResult } from "@/lib/types";
+import { apiFetch } from "@/lib/fetcher";
 
 const BASE_URL = "/api/menu-items";
-const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export function useMenuItems() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, fetcher);
+  const { data, error, isLoading, mutate } = useSWR(BASE_URL, apiFetch);
 
   const createMenuItem = async (values: unknown): Promise<HookResult> => {
     const parsed = menuItemSchema.safeParse(values);
@@ -57,7 +57,7 @@ export function useMenuItems() {
 
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        return { success: false, error: json?.error || "Failed to update menu item" };
+        return { success: false, error: json?.error.message || "Failed to update menu item" };
       }
 
       await mutate();
@@ -73,7 +73,7 @@ export function useMenuItems() {
       const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        return { success: false, error: json?.error || "Failed to delete menu item" };
+        return { success: false, error: json?.error.message || "Failed to delete menu item" };
       }
 
       await mutate();

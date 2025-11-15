@@ -1,15 +1,12 @@
 import useSWR from "swr";
 import { categorySchema } from "@/lib/validation";
 import type { HookResult } from "@/lib/types";
-import { apiFetch } from "@/lib/fetcher"; // ensure how to use ts
+import { apiFetch } from "@/lib/fetcher";
 
-// const BASE_URL = "/api/categories";
-// const fetcher = (url: string) => fetch(url).then(res => res.json());
 const BASE_URL = "/api/categories";
-const fetcher = (url: string) => apiFetch<any>(url);
 
 export function useCategories() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, fetcher);
+  const { data, error, isLoading, mutate } = useSWR(BASE_URL, apiFetch);
 
   const createCategory = async (values: unknown): Promise<HookResult> => {
     const parsed = categorySchema.safeParse(values);
@@ -30,7 +27,7 @@ export function useCategories() {
 
       if (!res.ok) {
         const json = await res.json().catch(() => ({})); // WHY CATCH wtf is that
-        return { success: false, error: json?.error || "Failed to create category" };
+        return { success: false, error: json?.error.message || "Failed to create category" };
       }
 
       await mutate();
@@ -60,7 +57,7 @@ export function useCategories() {
 
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        return { success: false, error: json?.error || "Failed to update category" };
+        return { success: false, error: json?.error.message || "Failed to update category" };
       }
 
       await mutate();

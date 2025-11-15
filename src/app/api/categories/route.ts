@@ -13,7 +13,7 @@ export async function GET() {
     return success(categories);
   } catch (error) {
     console.error("Error fetching categories:", error);
-    return failure("FETCHING_ERROR", "Failed to fetch categories", 500); // REFACTOR everything DUEY
+    return failure("FETCHING_ERROR", "Failed to fetch categories", 500);
   }
 }
 

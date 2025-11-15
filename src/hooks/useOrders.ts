@@ -1,11 +1,11 @@
 import useSWR from "swr";
 import { orderSchema } from "@/lib/validation";
+import { apiFetch } from "@/lib/fetcher";
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
 const BASE_URL = "/api/orders";
 
 export function useOrders() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, fetcher);
+  const { data, error, isLoading, mutate } = useSWR(BASE_URL, apiFetch);
 
   const createOrder = async (values: unknown) => {
     const parsed = orderSchema.parse(values);
