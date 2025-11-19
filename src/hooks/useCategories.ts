@@ -4,7 +4,7 @@ import type { HookResult } from "@/lib/types";
 import { apiFetch } from "@/lib/fetcher";
 import { z } from "zod";
 
-// 2. Extract the TypeScript type from your Zod schema
+// Extract the TypeScript type from your Zod schema
 type Category = z.infer<typeof categorySchema>;
 
 const BASE_URL = "/api/categories";
