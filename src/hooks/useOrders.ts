@@ -1,15 +1,16 @@
 import useSWR from "swr";
-import { createOrderCompositeSchema, orderSchema } from "@/lib/validation";
-import { apiFetch } from "@/lib/fetcher";
-import type { HookResult } from "@/lib/types";
+import { createOrderCompositeSchema, orderSchema } from "../lib/validation";
+import { apiFetch } from "../lib/fetcher";
+// Import the types from the shared types file
+import type { HookResult, Order } from "../lib/types";
 
 const BASE_URL = "/api/orders";
 
 export function useOrders() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, apiFetch);
+  // Now we use the imported Order interface
+  const { data, error, isLoading, mutate } = useSWR<Order[]>(BASE_URL, apiFetch);
 
   const createOrder = async (values: unknown): Promise<HookResult> => {
-    // Use the composite schema for creation
     const parsed = createOrderCompositeSchema.safeParse(values);
     
     if (!parsed.success) {
@@ -81,7 +82,7 @@ export function useOrders() {
   };
 
   return {
-    orders: data ?? [],
+    orders: Array.isArray(data) ? data : [],
     isLoading,
     isError: error,
     createOrder,
