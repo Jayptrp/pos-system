@@ -1,97 +1,91 @@
-import useSWR, { mutate } from "swr";
-import { CategoryInput } from "@/lib/validation";
+import useSWR from "swr";
+import { categorySchema } from "@/lib/validation";
+import type { HookResult } from "@/lib/types";
+import { apiFetch } from "@/lib/fetcher";
+import { z } from "zod";
+
+// Extract the TypeScript type from your Zod schema
+type Category = z.infer<typeof categorySchema>;
 
 const BASE_URL = "/api/categories";
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
-/* replaced union type with a single shape where optional fields exist on success or failure */
-type HookResult = {
-  success: boolean;
-  error?: string;
-  fieldErrors?: Record<string, string>;
-};
 
 export function useCategories() {
-  const { data, error, isLoading, mutate } = useSWR(BASE_URL, fetcher);
+  const { data, error, isLoading, mutate } = useSWR<Category[]>(BASE_URL, apiFetch);
 
   const createCategory = async (values: unknown): Promise<HookResult> => {
-    const name = (values as any)?.name?.toString()?.trim?.() ?? "";
-
-    if (!name) {
-      return { success: false, fieldErrors: { name: "Please enter a category name." } };
-    }
-
-    const existing = (data ?? []).find(
-      (c: any) => c.name && c.name.toString().toLowerCase() === name.toLowerCase()
-    );
-    if (existing) {
-      return { success: false, fieldErrors: { name: "Category name already exists." } };
-    }
-
-    const res = await fetch(BASE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-
-    if (!res.ok) {
-      try {
-        const json = await res.json();
-        return { success: false, error: json?.error || "Failed to create category" };
-      } catch {
-        return { success: false, error: "Failed to create category" };
+    const parsed = categorySchema.safeParse(values);
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const [key, value] of Object.entries(parsed.error.flatten().fieldErrors)) {
+        fieldErrors[key] = value?.[0] ?? "Invalid value";
       }
+      return { success: false, fieldErrors };
     }
 
-    await mutate();
-    return { success: true };
+    try {
+      const res = await fetch(BASE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})); // WHY CATCH wtf is that
+        return { success: false, error: json?.error.message || "Failed to create category" };
+      }
+
+      await mutate();
+      return { success: true };
+    } catch (err) {
+      console.error("Create category failed:", err);
+      return { success: false, error: "Unexpected error while creating category" };
+    }
   };
 
   const updateCategory = async (id: number, values: unknown): Promise<HookResult> => {
-    const name = (values as any)?.name?.toString()?.trim?.() ?? "";
-
-    if (!name) {
-      return { success: false, fieldErrors: { name: "Please enter a category name." } };
-    }
-
-    const existing = (data ?? []).find(
-      (c: any) => c.id !== id && c.name && c.name.toString().toLowerCase() === name.toLowerCase()
-    );
-    if (existing) {
-      return { success: false, fieldErrors: { name: "Category name already exists." } };
-    }
-
-    const res = await fetch(`${BASE_URL}/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-
-    if (!res.ok) {
-      try {
-        const json = await res.json();
-        return { success: false, error: json?.error || "Failed to update category" };
-      } catch {
-        return { success: false, error: "Failed to update category" };
+    const parsed = categorySchema.safeParse(values);
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const [key, value] of Object.entries(parsed.error.flatten().fieldErrors)) {
+        fieldErrors[key] = value?.[0] ?? "Invalid value";
       }
+      return { success: false, fieldErrors };
     }
 
-    await mutate();
-    return { success: true };
+    try {
+      const res = await fetch(`${BASE_URL}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        return { success: false, error: json?.error.message || "Failed to update category" };
+      }
+
+      await mutate();
+      return { success: true };
+    } catch (err) {
+      console.error("Update category failed:", err);
+      return { success: false, error: "Unexpected error while updating category" };
+    }
   };
 
   const deleteCategory = async (id: number): Promise<HookResult> => {
-    const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
-    if (!res.ok) {
-      try {
-        const json = await res.json();
-        return { success: false, error: json?.error || "Failed to delete category" };
-      } catch {
-        return { success: false, error: "Failed to delete category" };
+    try {
+      const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        return { success: false, error: json?.error?.message || "Failed to delete category" };
       }
+
+      await mutate();
+      return { success: true };
+    } catch (err) {
+      console.error("Delete category failed:", err);
+      return { success: false, error: "Unexpected error while deleting category" };
     }
-    await mutate();
-    return { success: true };
   };
 
   return {

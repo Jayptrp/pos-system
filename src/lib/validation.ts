@@ -23,11 +23,24 @@ export const inventoryLogSchema = z.object({
   changeType: z.enum(["INCREASE", "DECREASE"]),
 });
 
-// Order
+// Order (Basic)
 export const orderSchema = z.object({
-  tableNumber: z.number().int(),
-  status: z.enum(["PENDING", "COMPLETED", "CANCELLED"]),
+  tableNumber: z.number().int().positive(),
+  status: z.enum(["PENDING", "COMPLETED", "CANCELLED"]).default("PENDING"),
 });
+
+// Order Composite (For creating Order + Items + Payment in one go)
+export const createOrderCompositeSchema = z.object({
+  tableNumber: z.number().int().positive("Table number required"),
+  items: z.array(
+    z.object({
+      menuItemId: z.number().int(),
+      quantity: z.number().int().positive(),
+    })
+  ).min(1, "Order must have at least one item"),
+  paymentMethod: z.enum(["CASH", "MOBILE_BANKING"]).optional(),
+});
+
 
 // OrderItem
 export const orderItemSchema = z.object({

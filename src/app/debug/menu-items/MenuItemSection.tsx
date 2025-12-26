@@ -35,7 +35,6 @@ export default function MenuItemSection() {
   const openEdit = (item: any) => {
     setEditingItem(item);
     setNameInput(item.name ?? "");
-    // ensure priceInput is a string for controlled input
     setPriceInput(item.price !== undefined && item.price !== null ? String(item.price) : "");
     setSelectedCategory(item.categoryId ?? "");
     setNameError("");
@@ -44,18 +43,15 @@ export default function MenuItemSection() {
   };
 
   const handleSubmit = async () => {
-    // reset previous errors
     setNameError("");
     setPriceError("");
 
-    // validation: name required
     if (!nameInput.trim()) {
       setNameError("Please enter an item name.");
       nameRef.current?.focus();
       return;
     }
 
-    // validation: price required
     if (priceInput === "" || priceInput === null) {
       setPriceError("Please enter a price.");
       priceRef.current?.focus();
@@ -90,8 +86,8 @@ export default function MenuItemSection() {
       }
     } else {
       const res = await createMenuItem(payload);
-      if (res?.error) {
-        toast.error(res.error);
+      if (res.error || res.fieldErrors) {
+        toast.error(res.error || res.fieldErrors?.name || "Failed to create menu item");
       } else {
         toast.success("Menu item created successfully!");
       }
@@ -103,48 +99,89 @@ export default function MenuItemSection() {
   const handleDelete = async (id: number) => {
     const confirmation = await ShowConfirmToast("delete this menu item");
     if (!confirmation) return;
-    else {
-      try {
-        const res = await deleteMenuItem(id);
-
-        if (res?.error) {
-          toast.error(res.error);
-        } else {
-          toast.success("Menu item deleted successfully!");
-        }
-      } catch (err) {
-        toast.error("Something went wrong while deleting.");
+    
+    try {
+      const res = await deleteMenuItem(id);
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Menu item deleted successfully!");
       }
-    };
-  }
+    } catch (err) {
+      toast.error("Something went wrong while deleting.");
+    }
+  };
+
+  // --- Helper to render a single list item (Avoids duplication) ---
+  const renderMenuItem = (item: any) => (
+    <li key={item.id} className="flex justify-between items-center py-2 border-b last:border-0">
+      <span>{item.name} - ${item.price}</span>
+      <div className="space-x-2">
+        <button className="text-yellow-600 hover:underline" onClick={() => openEdit(item)}>
+          Edit
+        </button>
+        <button className="text-red-600 hover:underline" onClick={() => handleDelete(item.id)}>
+          Delete
+        </button>
+      </div>
+    </li>
+  );
+
+  // Filter items that don't have a category
+  const uncategorizedItems = menuItems ? menuItems.filter((item: any) => !item.category) : [];
 
   return (
     <div className="border p-4 rounded-lg">
-      <h2 className="text-xl font-semibold mb-2">Menu Items</h2>
-
-      <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={openCreate}>
-        + Create Item
-      </button>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Menu Items</h2>
+        <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" onClick={openCreate}>
+          + Create Item
+        </button>
+      </div>
 
       <div className="mt-3">
-        {isLoading ? (
+        {isLoading || categoriesLoading ? (
           <p>Loading...</p>
         ) : (
-          <ul className="divide-y">
-            {menuItems.map((item: any) => (
-              <li key={item.id} className="flex justify-between items-center py-2">
-                <span>{item.name} - ${item.price}</span>
-                <div className="space-x-2">
-                  <button className="text-yellow-600" onClick={() => openEdit(item)}>
-                    Edit
-                  </button>
-                  <button className="text-red-600" onClick={() => handleDelete(item.id)}>
-                    Delete
-                  </button>
+          <div className="space-y-6">
+            
+            {/* 1. Map through Categories */}
+            {categories.map((cat: any) => {
+              // Find items for this category
+              const catItems = menuItems.filter((item: any) => item.categoryId === cat.id);
+              
+              // Optional: Hide category section if empty? (Remove this check if you want to see empty headers)
+              if (catItems.length === 0) return null;
+
+              return (
+                <div key={cat.id} className="bg-gray-50 p-3 rounded-lg">
+                  <h3 className="font-bold text-lg text-gray-700 border-b pb-2 mb-2">
+                    {cat.name}
+                  </h3>
+                  <ul className="bg-white px-3 rounded border">
+                    {catItems.map(renderMenuItem)}
+                  </ul>
                 </div>
-              </li>
-            ))}
-          </ul>
+              );
+            })}
+
+            {/* 2. Show Uncategorized Items at the Bottom */}
+            {uncategorizedItems.length > 0 && (
+              <div className="bg-gray-50 p-3 rounded-lg border-t-4 border-gray-200">
+                <h3 className="font-bold text-lg text-gray-500 border-b pb-2 mb-2">
+                  Uncategorized
+                </h3>
+                <ul className="bg-white px-3 rounded border">
+                  {uncategorizedItems.map(renderMenuItem)}
+                </ul>
+              </div>
+            )}
+
+            {/* Handle case where there are no items at all */}
+            {menuItems.length === 0 && (
+               <p className="text-gray-500 text-center">No menu items found.</p>
+            )}
+          </div>
         )}
       </div>
 
@@ -162,14 +199,8 @@ export default function MenuItemSection() {
             onChange={(e) => setNameInput(e.target.value)}
             className={`border p-2 w-full mb-2 rounded ${nameError ? "border-red-500" : ""}`}
             placeholder="Item Name"
-            aria-invalid={!!nameError}
-            aria-describedby={nameError ? "item-name-error" : undefined}
           />
-          {nameError && (
-            <p id="item-name-error" className="text-sm text-red-600 mb-2">
-              {nameError}
-            </p>
-          )}
+          {nameError && <p className="text-sm text-red-600 mb-2">{nameError}</p>}
 
           <input
             ref={priceRef}
@@ -178,23 +209,17 @@ export default function MenuItemSection() {
             onChange={(e) => setPriceInput(e.target.value)}
             className={`border p-2 w-full mb-2 rounded ${priceError ? "border-red-500" : ""}`}
             placeholder="Price"
-            aria-invalid={!!priceError}
-            aria-describedby={priceError ? "price-error" : undefined}
             min="0"
             step="0.01"
           />
-          {priceError && (
-            <p id="price-error" className="text-sm text-red-600 mb-2">
-              {priceError}
-            </p>
-          )}
+          {priceError && <p className="text-sm text-red-600 mb-2">{priceError}</p>}
 
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(Number(e.target.value) || "")}
             className="border p-2 w-full mb-4 rounded"
           >
-            <option value="">Select category</option>
+            <option value="">Select category (Optional)</option>
             {categories.map((cat: any) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
@@ -203,7 +228,7 @@ export default function MenuItemSection() {
           </select>
 
           <button
-            className="bg-green-500 text-white px-4 py-2 rounded"
+            className="bg-green-500 text-white px-4 py-2 rounded w-full hover:bg-green-600"
             onClick={handleSubmit}
           >
             {editingItem ? "Update" : "Create"}

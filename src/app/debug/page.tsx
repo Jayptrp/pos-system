@@ -2,6 +2,9 @@
 
 import CategorySection from "./categories/CategorySection";
 import MenuItemSection from "./menu-items/MenuItemSection";
+import OrderSection from "./orders/OrderSection";
+// import InventoryLogSection from "./inventory-logs/InventoryLogSection";
+// import PaymentSection from "./payments/PaymentSection";
 
 export default function DebugPage() {
   return (
@@ -11,6 +14,9 @@ export default function DebugPage() {
       {/* Each section corresponds to a table */}
       <CategorySection />
       <MenuItemSection />
+      <OrderSection />
+      {/* <InventoryLogSection />
+      <PaymentSection /> */}
 
       {/* You can add more sections for other tables */}
     </div>

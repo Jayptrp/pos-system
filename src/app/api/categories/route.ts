@@ -1,36 +1,46 @@
-import { NextResponse } from 'next/server';
-import db from '@/lib/db';
-import type { Category } from '@prisma/client';
-import { categorySchema } from '@/lib/validation';
+import { NextRequest } from "next/server";
+import db from "@/lib/db";
+import { categorySchema } from "@/lib/validation";
+import { success, failure } from "@/lib/apiResponse";
+import { handlePrismaError } from "@/lib/errorHandler";
 
+// GET all categories
 export async function GET() {
   try {
-    const categories: Category[] = await db.category.findMany({
-      orderBy: { createdAt: 'desc' },
+    const categories = await db.category.findMany({
+      orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json(categories);
+    return success(categories);
   } catch (error) {
-    console.error('Error fetching categories:', error);
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
+    console.error("Error fetching categories:", error);
+    return failure("FETCHING_ERROR", "Failed to fetch categories", 500);
   }
 }
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const parsed = categorySchema.parse(body); // Zod validation
-    const { name } = parsed;
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
-    }
+// CREATE new category
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const parsed = categorySchema.safeParse(body);
 
-    const category: Category = await db.category.create({
+  if (!parsed.success) {
+    return failure("PARSED_ERROR", "Failed to parse the request", 400);
+  }
+
+  const { name } = parsed.data;
+  const existing = await db.category.findFirst({
+    where: { name: { equals: name, mode: "insensitive" } },
+  });
+
+  if (existing) {
+    return failure("DATA_EXISTING", "Category name already exists", 400);
+  }
+
+  try {
+    const newCategory = await db.category.create({
       data: { name },
     });
-
-    return NextResponse.json(category, { status: 201 });
+    return success(newCategory);
   } catch (error) {
-    console.error('Error creating category:', error);
-    return NextResponse.json({ error: 'Failed to create category' }, { status: 500 });
+    return handlePrismaError(error);
   }
 }

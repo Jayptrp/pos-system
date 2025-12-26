@@ -1,28 +1,30 @@
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import db from "@/lib/db";
 import { categorySchema } from "@/lib/validation";
-import { Prisma } from "@prisma/client";
+import { success, failure } from "@/lib/apiResponse";
+import { handlePrismaError } from "@/lib/errorHandler";
+import { z } from "zod";
 
 // GET one category
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const id = Number(params.id);
-  const category = await db.category.findUnique({ where: { id } });
 
+  const category = await db.category.findUnique({ where: { id } });
   if (!category) {
-    return NextResponse.json({ error: "Category not found" }, { status: 404 });
+    return failure("CATEGORY_NOT_FOUND", "Category not found", 404);
   }
 
-  return NextResponse.json(category);
+  return success(category);
 }
 
 // UPDATE category
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const id = Number(params.id);
   const body = await req.json();
 
   const parsed = categorySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(parsed.error.format(), { status: 400 });
+    return failure("VALIDATION_ERROR", "Invalid input", 400, z.treeifyError(parsed.error));
   }
 
   try {
@@ -30,34 +32,20 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       where: { id },
       data: parsed.data,
     });
-    return NextResponse.json(updated);
+    return success(updated);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to update category" }, { status: 500 });
+    return handlePrismaError(error);
   }
 }
 
 // DELETE category
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const param = await params
-  const id = Number(param.id);
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const id = Number(params.id);
 
   try {
     await db.category.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+    return success({ id });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2003") {
-        return NextResponse.json(
-          { error: "Cannot delete category: It is still referenced by existing menu items." },
-          { status: 400 }
-        );
-      }
-    }
-
-    console.error("Unexpected error deleting category:", error);
-    return NextResponse.json(
-      { error: "Failed to delete category" },
-      { status: 500 }
-    );
+    return handlePrismaError(error);
   }
 }
