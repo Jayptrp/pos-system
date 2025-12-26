@@ -30,7 +30,7 @@ export function useOrders() {
 
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        return { success: false, error: json?.error || "Failed to create order" };
+        return { success: false, error: json?.error.message || "Failed to create order" };
       }
 
       await mutate();
@@ -56,7 +56,7 @@ export function useOrders() {
 
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        return { success: false, error: json?.error || "Failed to update order" };
+        return { success: false, error: json?.error.message || "Failed to update order" };
       }
 
       await mutate();
@@ -71,7 +71,7 @@ export function useOrders() {
       const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        return { success: false, error: json?.error || "Failed to delete order" };
+        return { success: false, error: json?.error?.message || "Failed to delete order" };
       }
 
       await mutate();

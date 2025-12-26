@@ -1,20 +1,20 @@
 import db from "@/lib/db";
 import { NextResponse } from "next/server";
 import { createOrderCompositeSchema } from "@/lib/validation";
+import { success, failure } from "@/lib/apiResponse";
+import { handlePrismaError } from "@/lib/errorHandler";
 
 // GET All Orders
 export async function GET() {
   try {
     const orders = await db.order.findMany({
       include: { orderItems: true, payments: true },
-      orderBy: { createdAt: "asc" }, // Ascending by createdAt as requested
+      orderBy: { createdAt: "asc" },
     });
-    return NextResponse.json(orders);
+    // Wrap the result in the standard success format expected by your fetcher
+    return success(orders);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch orders" },
-      { status: 500 }
-    );
+    return handlePrismaError(error);
   }
 }
 
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const parsed = createOrderCompositeSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(parsed.error.format(), { status: 400 });
+      return failure("VALIDATION_ERROR", "Invalid input", 400, parsed.error.format());
     }
 
     const { tableNumber, items, paymentMethod } = parsed.data;
@@ -72,12 +72,9 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(newOrder, { status: 201 });
+    return success(newOrder, 201);
   } catch (error) {
     console.error("Order creation error:", error);
-    return NextResponse.json(
-      { error: "Failed to create order" },
-      { status: 500 }
-    );
+    return handlePrismaError(error);
   }
 }
