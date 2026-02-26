@@ -3,7 +3,7 @@
 import CategorySection from "./categories/CategorySection";
 import MenuItemSection from "./menu-items/MenuItemSection";
 import OrderSection from "./orders/OrderSection";
-// import InventoryLogSection from "./inventory-logs/InventoryLogSection";
+import InventoryLogSection from "./inventory-logs/InventoryLogSection";
 // import PaymentSection from "./payments/PaymentSection";
 
 export default function DebugPage() {
@@ -15,8 +15,8 @@ export default function DebugPage() {
       <CategorySection />
       <MenuItemSection />
       <OrderSection />
-      {/* <InventoryLogSection />
-      <PaymentSection /> */}
+      <InventoryLogSection />
+      {/* <PaymentSection /> */}
 
       {/* You can add more sections for other tables */}
     </div>

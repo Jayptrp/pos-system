@@ -28,3 +28,13 @@ export interface Order {
   orderItems: OrderItem[];
   payments: Payment[];
 }
+
+// --- Inventory Interfaces ---
+
+export interface InventoryLog {
+  id: number;
+  itemName: string;
+  quantity: number;
+  changeType: "INCREASE" | "DECREASE";
+  createdAt: string;
+}

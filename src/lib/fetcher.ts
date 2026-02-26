@@ -1,6 +1,7 @@
 export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
   const json = await res.json();
+  console.log(`API response from ${url}:`, json);
 
   if (!res.ok || !json.ok) {
     const message = json?.error?.message ?? "Something went wrong";
