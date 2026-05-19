@@ -21,7 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <li><a href="/categories">Categories</a></li>
             <li><a href="/inventory">Menu Items</a></li>
             <li><a href="/orders">Orders</a></li>
-            <li><a href="/debug">Debug</a></li>
+            {process.env.NODE_ENV === "development" && (
+              <li><a href="/debug">Debug</a></li>
+            )}
           </ul>
         </nav>
 

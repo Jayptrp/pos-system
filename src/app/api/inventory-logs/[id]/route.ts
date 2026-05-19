@@ -5,20 +5,27 @@ import { success, failure } from "@/lib/apiResponse";
 import { handlePrismaError } from "@/lib/errorHandler";
 import { z } from "zod";
 
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const param = await params;
-  const id = Number(param.id);
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
+  if (isNaN(id)) {
+    return failure("INVALID_ID", "ID must be a number", 400);
+  }
   try {
     const log = await db.inventoryLog.findUnique({ where: { id: id } });
+    if (!log) return failure("NOT_FOUND", "Log not found", 404);
     return success(log);
   } catch (error) {
     return handlePrismaError(error);
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const param = await params;
-  const id = Number(param.id);
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
+  if (isNaN(id)) {
+    return failure("INVALID_ID", "ID must be a number", 400);
+  }
   const body = await req.json();
   const parsed = inventoryLogSchema.partial().safeParse(body);
   if (!parsed.success) {
@@ -35,9 +42,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
-  const param = await params;
-  const id = Number(param.id);
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
+  if (isNaN(id)) {
+    return failure("INVALID_ID", "ID must be a number", 400);
+  }
   try {
     await db.inventoryLog.delete({ where: { id: id } });
     return success({ id });

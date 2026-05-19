@@ -6,11 +6,11 @@ import { handlePrismaError } from "@/lib/errorHandler";
 import { z } from "zod";
 
 // GET one menu item
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const param = await params;
-  const id = Number(param.id);
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
   if (isNaN(id)) {
-    return failure("INVALID_ID", "Invalid ID", 400);
+    return failure("INVALID_ID", "ID must be a number", 400);
   }
 
   try {
@@ -30,11 +30,11 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 }
 
 // UPDATE (PATCH) menu item
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const param = await params;
-  const id = Number(param.id);
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
   if (isNaN(id)) {
-    return failure("INVALID_ID", "Invalid ID", 400);
+    return failure("INVALID_ID", "ID must be a number", 400);
   }
 
   try {
@@ -57,11 +57,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // DELETE menu item
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
-  const param = await params;
-  const id = Number(param.id);
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
   if (isNaN(id)) {
-    return failure("INVALID_ID", "Invalid ID", 400);
+    return failure("INVALID_ID", "ID must be a number", 400);
   }
 
   try {

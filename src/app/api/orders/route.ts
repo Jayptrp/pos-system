@@ -1,14 +1,15 @@
 import db from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createOrderCompositeSchema } from "@/lib/validation";
 import { success, failure } from "@/lib/apiResponse";
 import { handlePrismaError } from "@/lib/errorHandler";
+import { z } from "zod";
 
 // GET All Orders
 export async function GET() {
   try {
     const orders = await db.order.findMany({
-      include: { orderItems: true, payments: true },
+      include: { orderItems: { include: { menuItem: true } }, payments: true },
       orderBy: { createdAt: "asc" },
     });
     // Wrap the result in the standard success format expected by your fetcher
@@ -19,13 +20,13 @@ export async function GET() {
 }
 
 // CREATE Order (Composite Transaction)
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const parsed = createOrderCompositeSchema.safeParse(body);
 
     if (!parsed.success) {
-      return failure("VALIDATION_ERROR", "Invalid input", 400, parsed.error.format());
+      return failure("VALIDATION_ERROR", "Invalid input", 400, z.treeifyError(parsed.error));
     }
 
     const { tableNumber, items, paymentMethod } = parsed.data;

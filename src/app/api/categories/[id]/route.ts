@@ -6,8 +6,13 @@ import { handlePrismaError } from "@/lib/errorHandler";
 import { z } from "zod";
 
 // GET one category
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
+
+  if (isNaN(id)) {
+    return failure("INVALID_ID", "ID must be a number", 400);
+  }
 
   const category = await db.category.findUnique({ where: { id } });
   if (!category) {
@@ -18,8 +23,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // UPDATE category
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
+
+  if (isNaN(id)) {
+    return failure("INVALID_ID", "ID must be a number", 400);
+  }
+
   const body = await req.json();
 
   const parsed = categorySchema.safeParse(body);
@@ -39,8 +50,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE category
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
+
+  if (isNaN(id)) {
+    return failure("INVALID_ID", "ID must be a number", 400);
+  }
 
   try {
     await db.category.delete({ where: { id } });

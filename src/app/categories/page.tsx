@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { CategoryInput } from "@/lib/validation";
 
+import { Category } from "@/lib/types";
+import toast from "react-hot-toast";
+
 export default function CategoriesPage() {
   const { categories, isLoading, isError, createCategory, updateCategory, deleteCategory } =
     useCategories();
@@ -22,8 +25,8 @@ export default function CategoriesPage() {
         await createCategory(form);
       }
       setForm({ name: "" });
-    } catch (error) {
-      alert(error);
+    } catch (error: any) {
+      toast.error(error?.message || "Something went wrong");
     }
   }
 
@@ -52,7 +55,7 @@ export default function CategoriesPage() {
 
       {/* Category list */}
       <ul className="space-y-2">
-        {categories?.map((cat: any) => (
+        {categories?.map((cat: Category) => (
           <li key={cat.id} className="flex justify-between items-center border p-2 rounded">
             <span>{cat.name}</span>
             <div className="flex gap-2">

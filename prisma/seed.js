@@ -1,8 +1,22 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding started...');
+
+  // 0. Users
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  await prisma.user.upsert({
+    where: { email: 'admin@pos.com' },
+    update: {},
+    create: {
+      email: 'admin@pos.com',
+      password: hashedPassword,
+      name: 'Admin User',
+      role: 'ADMIN',
+    },
+  });
 
   // 1. Categories
   const categories = await prisma.category.createMany({

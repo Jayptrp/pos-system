@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { useMenuItems } from "@/hooks/useMenuItems";
+import { CreateOrderPayload, HookResult, MenuItem, Category } from "@/lib/types";
 import toast from "react-hot-toast";
 
 type NewOrderPopupProps = {
   onClose: () => void;
-  onSubmit: (payload: any) => Promise<any>;
+  onSubmit: (payload: CreateOrderPayload) => Promise<HookResult>;
 };
 
 type CartItem = {
@@ -24,12 +25,12 @@ export default function NewOrderPopup({ onClose, onSubmit }: NewOrderPopupProps)
   // States
   const [tableNumber, setTableNumber] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "MOBILE_BANKING" | "">("CASH");
-  const [cart,ZBcart] = useState<Record<number, CartItem>>({});
+  const [cart, setCart] = useState<Record<number, CartItem>>({});
   const [tempQuantities, setTempQuantities] = useState<Record<number, number>>({});
 
   // Helper to get items by category
   const getItemsByCategory = (catId: number) => {
-    return menuItems.filter((item: any) => item.categoryId === catId);
+    return menuItems.filter((item: MenuItem) => item.categoryId === catId);
   };
 
   // Handlers
@@ -38,11 +39,11 @@ export default function NewOrderPopup({ onClose, onSubmit }: NewOrderPopupProps)
     setTempQuantities((prev) => ({ ...prev, [itemId]: isNaN(num) ? 0 : num }));
   };
 
-  const addToCart = (item: any) => {
+  const addToCart = (item: MenuItem) => {
     const qty = tempQuantities[item.id] || 1;
     if (qty <= 0) return toast.error("Quantity must be > 0");
 
-    ZBcart((prev) => ({
+    setCart((prev) => ({
       ...prev,
       [item.id]: {
         id: item.id,
@@ -106,7 +107,7 @@ export default function NewOrderPopup({ onClose, onSubmit }: NewOrderPopupProps)
 
           {/* Menu Sections */}
           <div className="space-y-8">
-            {categories.map((cat: any) => {
+            {categories.map((cat: Category) => {
               const items = getItemsByCategory(cat.id);
               if (items.length === 0) return null;
 
@@ -114,7 +115,7 @@ export default function NewOrderPopup({ onClose, onSubmit }: NewOrderPopupProps)
                 <div key={cat.id}>
                   <h3 className="text-lg font-bold text-gray-800 mb-3 border-b pb-1">{cat.name}</h3>
                   <div className="grid gap-3">
-                    {items.map((item: any) => (
+                    {items.map((item: MenuItem) => (
                       <div key={item.id} className="flex items-center justify-between bg-white p-3 rounded shadow-sm border hover:border-blue-300 transition-colors">
                         
                         {/* Item Info */}

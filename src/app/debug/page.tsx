@@ -1,12 +1,25 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import CategorySection from "./categories/CategorySection";
 import MenuItemSection from "./menu-items/MenuItemSection";
 import OrderSection from "./orders/OrderSection";
 import InventoryLogSection from "./inventory-logs/InventoryLogSection";
-// import PaymentSection from "./payments/PaymentSection";
 
 export default function DebugPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") {
+      router.replace("/");
+    }
+  }, [router]);
+
+  if (process.env.NODE_ENV !== "development") {
+    return null;
+  }
+
   return (
     <div className="max-w-xl mx-auto py-6 space-y-8">
       <h1 className="text-3xl font-bold">Debug Dashboard</h1>
@@ -16,9 +29,6 @@ export default function DebugPage() {
       <MenuItemSection />
       <OrderSection />
       <InventoryLogSection />
-      {/* <PaymentSection /> */}
-
-      {/* You can add more sections for other tables */}
     </div>
   );
 }

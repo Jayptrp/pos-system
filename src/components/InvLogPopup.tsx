@@ -3,10 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import PopupForm from "@/components/PopupForm";
 
+import { CreateInventoryLogInput, HookResult, InventoryLog } from "@/lib/types";
+
 interface InvLogPopupProps {
   onClose: () => void;
-  onSubmit: (payload: any) => Promise<void>; // Or return a specific type if needed
-  initialData?: any; // For editing mode
+  onSubmit: (payload: CreateInventoryLogInput) => Promise<HookResult>;
+  initialData?: InventoryLog; // For editing mode
 }
 
 export default function InvLogPopup({ onClose, onSubmit, initialData }: InvLogPopupProps) {

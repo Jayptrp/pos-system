@@ -6,11 +6,13 @@ import PopupForm from "@/components/PopupForm";
 import ShowConfirmToast from "@/components/ShowConfirmToast";
 import toast from "react-hot-toast";
 
+import { Category } from "@/lib/types";
+
 export default function CategorySection() {
   const { categories, createCategory, updateCategory, deleteCategory, isLoading } = useCategories();
 
   const [showPopup, setShowPopup] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [nameInput, setNameInput] = useState("");
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -22,7 +24,7 @@ export default function CategorySection() {
     setShowPopup(true);
   };
 
-  const openEdit = (cat: any) => {
+  const openEdit = (cat: Category) => {
     setEditingCategory(cat);
     setNameInput(cat.name);
     setError("");
@@ -95,7 +97,7 @@ export default function CategorySection() {
           <p>Loading...</p>
         ) : (
           <ul className="divide-y">
-            {categories.map((cat: any) => (
+            {categories.map((cat: Category) => (
               <li key={cat.id} className="flex justify-between items-center py-2">
                 <span>{cat.name}</span>
                 <div className="space-x-2">

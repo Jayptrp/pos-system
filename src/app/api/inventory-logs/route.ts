@@ -9,20 +9,35 @@ export async function GET() {
     const logs = await db.inventoryLog.findMany({ orderBy: { createdAt: "desc" } });
     return success(logs);
   } catch (error) {
-    console.error("Error fetching inventory logs:", error);
-    return failure("FETCHING_ERROR", "Failed to fetch inventory logs", 500);
+    return handlePrismaError(error);
   }
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const parsed = inventoryLogSchema.safeParse(body);
-  if (!parsed.success) {
-    return failure("PARSED_ERROR", "Failed to parse the request", 400);
-  }
   try {
+    const body = await req.json();
+    const parsed = inventoryLogSchema.safeParse(body);
+    if (!parsed.success) {
+      return failure("VALIDATION_ERROR", "Invalid input", 400);
+    }
+
+    // Business Rule: Inventory stock cannot go below 0
+    if (parsed.data.changeType === "DECREASE") {
+      const logs = await db.inventoryLog.findMany({
+        where: { itemName: parsed.data.itemName },
+      });
+
+      const currentStock = logs.reduce((acc, log) => {
+        return log.changeType === "INCREASE" ? acc + log.quantity : acc - log.quantity;
+      }, 0);
+
+      if (currentStock < parsed.data.quantity) {
+        return failure("INSUFFICIENT_STOCK", `Not enough stock. Current: ${currentStock}`, 400);
+      }
+    }
+
     const log = await db.inventoryLog.create({ data: parsed.data });
-  return success(log);
+    return success(log, 201);
   } catch (error) {
     return handlePrismaError(error);
   }
